@@ -13,9 +13,18 @@ fi
 CACHE=/tmp/wayland-plus-weather-${USER}.json
 MAX_AGE=900
 
+UNITS="${UNITS:-metric}"   # metric | imperial (config.env)
+if [ "$UNITS" = imperial ]; then
+  UNIT_PARAMS="&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+  TU="°F"; WU="mph"; RU="in"
+else
+  UNIT_PARAMS=""
+  TU="°C"; WU="km/h"; RU="mm"
+fi
+
 fetch() {
   local raw
-  raw=$(curl -fsS --max-time 10 "https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=precipitation_probability,precipitation&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto") || return
+  raw=$(curl -fsS --max-time 10 "https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=precipitation_probability,precipitation&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto${UNIT_PARAMS}") || return
   jq '{
     temp: .current.temperature_2m,
     feels: .current.apparent_temperature,
@@ -64,13 +73,13 @@ rain3h=$(jq -r '.rain_3h // 0' "$CACHE")
 
 case "$1" in
   notify)
-    notify-send -a weather -t 15000 "Weather${CITY:+ — $CITY}: ${desc}, ${temp}°C" "Feels like ${feels}°C · Wind ${wind} km/h
-Next 3h rain: ${rain3h} mm
-Today: ${rainsum} mm expected, ${prob}% chance
-High ${tmax}° / Low ${tmin}°" 2>/dev/null
+    notify-send -a weather -t 15000 "Weather${CITY:+ — $CITY}: ${desc}, ${temp}${TU}" "Feels like ${feels}${TU} · Wind ${wind} ${WU}
+Next 3h rain: ${rain3h} ${RU}
+Today: ${rainsum} ${RU} expected, ${prob}% chance
+High ${tmax}${TU} / Low ${tmin}${TU}" 2>/dev/null
     ;;
   *)
-    printf '{"text": "%s %s°", "class": "%s", "tooltip": "%s · wind %s km/h · rain today %s mm (%s%%)"}\n' \
-      "$icon" "$temp" "$class" "$desc" "$wind" "$rainsum" "$prob"
+    printf '{"text": "%s %s%s", "class": "%s", "tooltip": "%s · wind %s %s · rain today %s %s (%s%%)"}\n' \
+      "$icon" "$temp" "$TU" "$class" "$desc" "$wind" "$WU" "$rainsum" "$RU" "$prob"
     ;;
 esac

@@ -58,8 +58,9 @@ cd wayland-plus
 
 The installer backs up any configs it replaces (`*.bak-<timestamp>`), copies
 everything, and enables the systemd user units. Then edit
-`~/.config/wayland-plus/config.env` and set your coordinates/timezone/city —
-the AQI modules refuse to run until you do (no hardcoded locations).
+`~/.config/wayland-plus/config.env` and set your coordinates/timezone/city
+(and `UNITS=imperial` if you prefer °F/mph/in) — the AQI/weather modules
+refuse to run until you do (no hardcoded locations).
 
 Dependencies (Debian/Ubuntu) — the installer prints the full list:
 waybar, sway, swaybg, swayidle, swaylock, dunst, kitty, tmux, fuzzel, rofi,

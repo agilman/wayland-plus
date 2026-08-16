@@ -36,15 +36,23 @@ def load_config():
 _cfg = load_config()
 LAT, LON = _cfg.get("LAT"), _cfg.get("LON")
 CITY = _cfg.get("CITY", "")
+UNITS = _cfg.get("UNITS", "metric")
 if not LAT or not LON or LAT == "0.0":
     raise SystemExit(f"wayland-plus: set LAT/LON in {CONFIG}")
+
+if UNITS == "imperial":
+    _UP = "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+    TU, RU = "°F", "in"
+else:
+    _UP = ""
+    TU, RU = "°C", "mm"
 
 URL = ("https://api.open-meteo.com/v1/forecast"
        f"?latitude={LAT}&longitude={LON}"
        "&hourly=temperature_2m,precipitation_probability,precipitation"
        "&daily=precipitation_sum,precipitation_probability_max,"
        "temperature_2m_max,temperature_2m_min"
-       "&forecast_hours=24&timezone=auto")
+       f"&forecast_hours=24&timezone=auto{_UP}")
 OUT = f"/tmp/wayland-plus-weather-chart-{os.environ.get('USER', 'user')}.png"
 MAX_AGE = 15 * 60
 
@@ -76,8 +84,9 @@ def render():
     x = list(range(len(rain)))
     # rain bars
     ax.bar(x, [r or 0 for r in rain], color="#89b4fa", alpha=0.85, width=0.8)
-    ax.set_ylabel("mm", color="#89b4fa", fontsize=7)
-    ax.set_ylim(0, max(1.5, max((r or 0) for r in rain) * 1.3))
+    ax.set_ylabel(RU, color="#89b4fa", fontsize=7)
+    ax.set_ylim(0, max(1.5 if UNITS != "imperial" else 0.1,
+                       max((r or 0) for r in rain) * 1.3))
     ax.tick_params(axis="y", colors="#89b4fa", labelsize=6)
 
     # probability + temperature on secondary axis
@@ -86,7 +95,7 @@ def render():
     ax2.plot(x, temp, color="#fab387", lw=1.6)
     ax2.set_ylim(0, max(100, max(temp) * 1.2))
     ax2.tick_params(axis="y", colors="#a6adc8", labelsize=6)
-    ax2.set_ylabel("% / °C", color="#a6adc8", fontsize=7)
+    ax2.set_ylabel(f"% / {TU}", color="#a6adc8", fontsize=7)
 
     step = max(1, len(times) // 6)
     ax.set_xticks(range(0, len(times), step))
@@ -101,25 +110,25 @@ def render():
     total = sum(r or 0 for r in rain)
     peak_i = max(range(len(rain)), key=lambda i: rain[i] or 0)
     city = f" — {CITY}" if CITY else ""
-    ax.set_title(f"Rain{city} — next {len(rain)} h  ·  total {total:.1f} mm",
+    ax.set_title(f"Rain{city} — next {len(rain)} h  ·  total {total:.2f} {RU}",
                  color="#cdd6f4", fontsize=9, loc="left")
     if (rain[peak_i] or 0) > 0:
-        ax.annotate(f"{rain[peak_i]:.1f} mm",
+        ax.annotate(f"{rain[peak_i]:.2f} {RU}",
                     xy=(peak_i, rain[peak_i]), xytext=(4, 4),
                     textcoords="offset points", color="#89b4fa", fontsize=7)
 
     fig.text(0.12, 0.045,
              f"prob max {dy['precipitation_probability_max'][0]}%  ·  "
-             f"{dy['temperature_2m_min'][0]:.0f}–{dy['temperature_2m_max'][0]:.0f} °C  ·  "
-             "bars: rain mm · dashed: prob % · orange: temp",
+             f"{dy['temperature_2m_min'][0]:.0f}–{dy['temperature_2m_max'][0]:.0f} {TU}  ·  "
+             f"bars: rain {RU} · dashed: prob % · orange: temp",
              color="#a6adc8", fontsize=6)
 
     fig.savefig(OUT, facecolor=fig.get_facecolor())
 
-    return (f"Next 24h: {total:.1f} mm rain · "
-            f"peak {rain[peak_i] or 0:.1f} mm at {times[peak_i].strftime('%H:%M')}\n"
+    return (f"Next 24h: {total:.2f} {RU} rain · "
+            f"peak {rain[peak_i] or 0:.2f} {RU} at {times[peak_i].strftime('%H:%M')}\n"
             f"Prob max {dy['precipitation_probability_max'][0]}% · "
-            f"{dy['temperature_2m_min'][0]:.0f}–{dy['temperature_2m_max'][0]:.0f} °C")
+            f"{dy['temperature_2m_min'][0]:.0f}–{dy['temperature_2m_max'][0]:.0f} {TU}")
 
 def show():
     subprocess.run(["notify-send", "-a", "weather-chart", "-t", "20000", "-i", OUT,

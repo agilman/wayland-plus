@@ -22,7 +22,7 @@ mkdir -p "$CFG/scripts" "$HOME/.local/share/wayland-plus" "$HOME/.local/state"
 if [ ! -f "$CFG/config.env" ]; then
   cp "$SRC/config.env.example" "$CFG/config.env"
   echo ">> Created $CFG/config.env"
-  echo ">> EDIT IT: set LAT/LON/TZ/CITY before the AQI modules will work."
+  echo ">> EDIT IT: set LAT/LON/TZ/CITY (and UNITS if you want imperial) before the AQI/weather modules will work."
 else
   echo ">> Keeping existing $CFG/config.env"
 fi
