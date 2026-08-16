@@ -49,6 +49,7 @@ cp -v "$SRC"/systemd/*.service "$SRC"/systemd/*.timer "$HOME/.config/systemd/use
 systemctl --user daemon-reload
 systemctl --user enable --now cpu-history.service
 systemctl --user enable --now aqi-chart.timer
+systemctl --user enable --now weather-chart.timer
 
 cat <<EOF
 

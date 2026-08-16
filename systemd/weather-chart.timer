@@ -1,0 +1,10 @@
+[Unit]
+Description=Weather chart base pre-render, every 3 hours
+
+[Timer]
+OnBootSec=5min
+OnCalendar=00/3:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

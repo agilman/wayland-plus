@@ -1,0 +1,6 @@
+[Unit]
+Description=Pre-render weather forecast chart base (every 3h)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.config/wayland-plus/scripts/weather-chart.py --render

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""24h rain forecast chart -> dunst image notification.
-Fetches hourly precipitation/probability/temperature from Open-Meteo,
-renders Catppuccin-styled PNG (<=290px tall, dunst-safe).
-Config: ~/.config/wayland-plus/config.env (LAT/LON/TZ/CITY).
+"""24h rain + temperature forecast chart -> dunst image notification.
 
-Modes:
-  --render   fetch + render cache PNG, no notification
-  (default)  show cached PNG if fresh (<15 min); else render first, then show.
+Architecture (fast clicks):
+  --render   fetch forecast -> JSON cache + base PNG (used by systemd timer)
+  (default)  overlay a "now" line on the cached base PNG via PIL (~0.2s),
+             then show. Only falls back to a full fetch+render if the
+             cache is stale (>3h) or missing.
+
+Base PNG has fixed geometry (360x290, ax rect [0.12, 0.16, 0.76, 0.66]),
+so the time->pixel mapping for the "now" line is exact.
+Config: ~/.config/wayland-plus/config.env (LAT/LON/TZ/CITY/UNITS).
 """
 import datetime
 import json
@@ -19,6 +22,15 @@ import urllib.request
 CONFIG = os.path.join(os.environ.get("XDG_CONFIG_HOME",
                                       os.path.expanduser("~/.config")),
                       "wayland-plus", "config.env")
+USER = os.environ.get("USER", "user")
+JSON_CACHE = f"/tmp/wayland-plus-weather-forecast-{USER}.json"
+BASE_PNG = f"/tmp/wayland-plus-weather-chart-base-{USER}.png"
+OUT = f"/tmp/wayland-plus-weather-chart-{USER}.png"
+MAX_AGE = 3 * 3600  # base cache considered stale after 3 hours
+
+# plot area geometry (must match fig.add_axes below): figsize 3.6x2.9 @100dpi
+AX_X0, AX_W = 0.12 * 360, 0.76 * 360
+AX_Y0, AX_Y1 = (1 - (0.16 + 0.66)) * 290, (1 - 0.16) * 290
 
 def load_config():
     cfg = {}
@@ -53,22 +65,27 @@ URL = ("https://api.open-meteo.com/v1/forecast"
        "&daily=precipitation_sum,precipitation_probability_max,"
        "temperature_2m_max,temperature_2m_min"
        f"&forecast_hours=24&timezone=auto{_UP}")
-OUT = f"/tmp/wayland-plus-weather-chart-{os.environ.get('USER', 'user')}.png"
-MAX_AGE = 15 * 60
 
-def cache_fresh():
-    try:
-        return (time.time() - os.path.getmtime(OUT)) < MAX_AGE
-    except OSError:
-        return False
+def fetch():
+    with urllib.request.urlopen(URL, timeout=15) as r:
+        d = json.load(r)
+    json.dump(d, open(JSON_CACHE, "w"))
+    return d
 
-def render():
+def load_cached():
+    if os.path.exists(JSON_CACHE) and os.path.exists(BASE_PNG):
+        if time.time() - os.path.getmtime(BASE_PNG) < MAX_AGE:
+            try:
+                return json.load(open(JSON_CACHE))
+            except (OSError, ValueError):
+                pass
+    return None
+
+def render_base(d):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    with urllib.request.urlopen(URL, timeout=15) as r:
-        d = json.load(r)
     h = d["hourly"]
     times = [datetime.datetime.fromisoformat(t) for t in h["time"]]
     temp = h["temperature_2m"]
@@ -82,14 +99,12 @@ def render():
     ax.set_facecolor("#181825")
 
     x = list(range(len(rain)))
-    # rain bars
     ax.bar(x, [r or 0 for r in rain], color="#89b4fa", alpha=0.85, width=0.8)
     ax.set_ylabel(RU, color="#89b4fa", fontsize=7)
     ax.set_ylim(0, max(1.5 if UNITS != "imperial" else 0.1,
                        max((r or 0) for r in rain) * 1.3))
     ax.tick_params(axis="y", colors="#89b4fa", labelsize=6)
 
-    # probability + temperature on secondary axis
     ax2 = ax.twinx()
     ax2.plot(x, [p or 0 for p in prob], color="#74c7ec", lw=1.2, ls="--")
     ax2.plot(x, temp, color="#fab387", lw=1.6)
@@ -123,24 +138,48 @@ def render():
              f"bars: rain {RU} · dashed: prob % · orange: temp",
              color="#a6adc8", fontsize=6)
 
-    fig.savefig(OUT, facecolor=fig.get_facecolor())
+    fig.savefig(BASE_PNG, facecolor=fig.get_facecolor())
 
-    return (f"Next 24h: {total:.2f} {RU} rain · "
+def overlay_now(d):
+    """Copy base PNG and draw a vertical 'now' line at the current time."""
+    from PIL import Image, ImageDraw
+    times = [datetime.datetime.fromisoformat(t) for t in d["hourly"]["time"]]
+    now = datetime.datetime.now()
+    n = len(times)
+    # fractional index of 'now' (hourly slots, times[0] = forecast start)
+    fi = (now - times[0]).total_seconds() / 3600
+    frac = (fi + 0.5) / n                     # xlim is (-0.5, n-0.5)
+    frac = max(0.0, min(1.0, frac))
+    x = AX_X0 + frac * AX_W
+
+    img = Image.open(BASE_PNG).convert("RGB")
+    dr = ImageDraw.Draw(img)
+    dr.line([(x, AX_Y0), (x, AX_Y1)], fill="#f38ba8", width=2)
+    img.save(OUT)
+
+def show(d):
+    h, dy = d["hourly"], d["daily"]
+    rain = h["precipitation"]
+    times = [datetime.datetime.fromisoformat(t) for t in h["time"]]
+    total = sum(r or 0 for r in rain)
+    peak_i = max(range(len(rain)), key=lambda i: rain[i] or 0)
+    body = (f"Next 24h: {total:.2f} {RU} rain · "
             f"peak {rain[peak_i] or 0:.2f} {RU} at {times[peak_i].strftime('%H:%M')}\n"
             f"Prob max {dy['precipitation_probability_max'][0]}% · "
             f"{dy['temperature_2m_min'][0]:.0f}–{dy['temperature_2m_max'][0]:.0f} {TU}")
-
-def show():
-    subprocess.run(["notify-send", "-a", "weather-chart", "-t", "20000", "-i", OUT,
-                    " ", " "])
+    subprocess.run(["notify-send", "-a", "weather-chart", "-t", "20000",
+                    "-i", OUT, "Weather — next 24 h", body])
 
 def main():
     if "--render" in sys.argv:
-        render()
+        render_base(fetch())
         return
-    if not cache_fresh():
-        render()
-    show()
+    d = load_cached()
+    if d is None:
+        d = fetch()
+        render_base(d)
+    overlay_now(d)
+    show(d)
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,7 @@ Evolved from an i3/polybar rice; now fully Wayland-native.
 
 | Module | Shows | Left click | Right click | Middle click |
 |---|---|---|---|---|
-| **Weather** | Open-Meteo current conditions (icon + temp) | 24h rain chart (dunst image) | Detail popup | — |
+| **Weather** | Open-Meteo current conditions (icon + temp) | 24h rain/temp chart with "now" line (dunst image) | Detail popup | — |
 | **Moon** | Phase icon (computed offline) | Popup: phase, illumination, next full/new moon | — | — |
 | **AQI** | US Air Quality Index, EPA-colored | 24h forecast chart (dunst image) | Detail popup (source, PM2.5, as-of) | AirNow fire/smoke map |
 | **CPU** | Live busy % | Last-hour chart + top-5 consumers | Top consumers popup | — |
@@ -33,6 +33,11 @@ monitor data exists. The forecast chart renders the 24h model curve with EPA
 category bands and annotates the current official reading for comparison.
 
 A systemd timer pre-renders the chart hourly so clicks feel instant.
+
+The **weather chart** splits work differently: a timer renders the *base*
+chart (rain bars + probability + temperature) every 3 hours from cached
+forecast data; clicking overlays a vertical "now" line with PIL (~0.2 s,
+no network, no matplotlib), so the first click of the day is instant.
 
 ### CPU chart with history
 
