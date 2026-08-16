@@ -1,0 +1,73 @@
+// Waybar config — wayland-plus
+// Layout: workspaces left, date center, aqi/cpu/mem/audio/battery/net right
+{
+  "layer": "top",
+  "position": "top",
+  "height": 26,
+  "margin-top": 4,
+  "spacing": 8,
+
+  "modules-left": ["sway/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["custom/aqi", "custom/cpu", "custom/memory", "pulseaudio", "battery", "network", "tray"],
+
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": false,
+    "format": "{name}"
+  },
+
+  "clock": {
+    "interval": 30,
+    "format": "󰃭 {:%a %b %d  󰥔 %H:%M}"
+  },
+
+  "custom/aqi": {
+    "exec": "~/.config/wayland-plus/scripts/aqi.sh waybar",
+    "return-type": "json",
+    "interval": 60,
+    "on-click": "python3 ~/.config/wayland-plus/scripts/aqi-chart.py",
+    "on-click-right": "~/.config/wayland-plus/scripts/aqi.sh notify",
+    "on-click-middle": "~/.config/wayland-plus/scripts/aqi-open.sh"
+  },
+
+  "custom/cpu": {
+    "exec": "~/.config/wayland-plus/scripts/cpu-live.sh",
+    "interval": 3,
+    "on-click": "python3 ~/.config/wayland-plus/scripts/cpu-chart.py",
+    "on-click-right": "~/.config/wayland-plus/scripts/cpu-top.sh"
+  },
+
+  "custom/memory": {
+    "exec": "~/.config/wayland-plus/scripts/mem-live.sh",
+    "interval": 5,
+    "on-click": "~/.config/wayland-plus/scripts/mem-info.sh"
+  },
+
+  "pulseaudio": {
+    "format": "󰕾 {volume}%",
+    "format-muted": "󰖁 muted",
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-click-right": "pavucontrol"
+  },
+
+  "battery": {
+    // Some laptops expose BAT1 instead of BAT0 — adjust if battery shows nothing
+    "interval": 30,
+    "bat": "BAT1",
+    "format": "󰁹 {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-full": "󰁹 {capacity}%"
+  },
+
+  "network": {
+    // No interface pinned: waybar autodetects the active one
+    "interval": 5,
+    "format-wifi": "󰖩 {essid}",
+    "format-disconnected": "󰖪 offline"
+  },
+
+  "tray": {
+    "spacing": 8
+  }
+}

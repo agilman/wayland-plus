@@ -1,0 +1,6 @@
+[Unit]
+Description=Pre-render AQI forecast chart cache
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.config/wayland-plus/scripts/aqi-chart.py --render

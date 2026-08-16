@@ -1,0 +1,31 @@
+[global]
+max_icon_size = 380
+icon_position = left
+font = JetBrainsMono Nerd Font 11
+frame_color = "#cba6f7"
+frame_width = 2
+corner_radius = 10
+width = 420
+origin = top-right
+offset = 12x40
+padding = 12
+horizontal_padding = 12
+separator_height = 2
+markup = full
+format = "<b>%s</b>\n%b"
+show_indicators = no
+
+[urgency_low]
+background = "#1e1e2e"
+foreground = "#cdd6f4"
+timeout = 5
+
+[urgency_normal]
+background = "#313244"
+foreground = "#cdd6f4"
+timeout = 8
+
+[urgency_critical]
+background = "#f38ba8"
+foreground = "#1e1e2e"
+timeout = 0

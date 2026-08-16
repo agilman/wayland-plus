@@ -1,0 +1,6 @@
+# wayland-plus local config — gitignored, never committed
+config.env
+
+# runtime artifacts
+*.log
+__pycache__/

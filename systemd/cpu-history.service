@@ -1,0 +1,10 @@
+[Unit]
+Description=CPU usage history sampler for wayland-plus chart popups
+
+[Service]
+ExecStart=%h/.config/wayland-plus/scripts/cpu-sample.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

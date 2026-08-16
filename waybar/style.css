@@ -1,0 +1,62 @@
+/* Waybar style — Catppuccin Mocha, matches polybar bar/main (Clawdia 2026-08-15) */
+
+* {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background-color: #1e1e2e;
+  border-radius: 8px;
+  color: #cdd6f4;
+}
+
+/* ---- workspaces (polybar [module/i3]) ---- */
+#workspaces {
+  padding: 0 4px;
+}
+#workspaces button {
+  padding: 0 8px;
+  background: transparent;
+  color: #a6adc8;
+}
+#workspaces button.focused {
+  background-color: #313244;  /* surface0 — darker still */
+  color: #cba6f7;             /* mauve text for contrast */
+  border-top: 2px solid #a6e3a1;  /* keep the green overline */
+}
+#workspaces button.visible {
+  color: #cdd6f4;
+}
+#workspaces button.urgent {
+  background-color: #f38ba8;
+  color: #1e1e2e;
+}
+#workspaces button:hover {
+  box-shadow: inherit;
+  text-shadow: inherit;
+  background: #313244;
+}
+
+/* ---- generic module spacing (polybar module-margin = 1) ---- */
+#clock, #custom-aqi, #custom-cpu, #custom-memory,
+#pulseaudio, #battery, #network, #tray {
+  padding: 0 4px;
+}
+
+/* ---- AQI classes (EPA categories, colors from aqi.sh color_for) ---- */
+#custom-aqi.good          { color: #a6e3a1; }
+#custom-aqi.moderate      { color: #f9e2af; }
+#custom-aqi.usg           { color: #fab387; }
+#custom-aqi.unhealthy     { color: #f38ba8; }
+#custom-aqi.veryunhealthy { color: #cba6f7; }
+#custom-aqi.hazardous     { color: #f38ba8; }
+#custom-aqi.nodata        { color: #585b70; }
+
+/* ---- audio ---- */
+#pulseaudio.muted { color: #a6adc8; }
+
+/* ---- network ---- */
+#network.disconnected { color: #a6adc8; }
