@@ -22,11 +22,16 @@ exec swayidle -w \
 # NetworkManager tray applet (runs via XWayland; tray lives in waybar)
 exec --no-startup-id nm-applet
 
-# Volume keys (PipeWire/PulseAudio — session-agnostic, unchanged from i3)
-bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10%
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10%
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+# Volume keys via SwayOSD (on-screen indicator daemon, exec'd below)
+# Note: Debian's swayosd uses --output-volume/--input-volume flags
+bindsym XF86AudioRaiseVolume exec --no-startup-id swayosd-client --output-volume raise
+bindsym XF86AudioLowerVolume exec --no-startup-id swayosd-client --output-volume lower
+bindsym XF86AudioMute exec --no-startup-id swayosd-client --output-volume mute-toggle
+bindsym XF86AudioMicMute exec --no-startup-id swayosd-client --input-volume mute-toggle
+
+# Brightness keys via SwayOSD (user must be in the video group)
+bindsym XF86MonBrightnessUp exec --no-startup-id swayosd-client --brightness raise
+bindsym XF86MonBrightnessDown exec --no-startup-id swayosd-client --brightness lower
 
 # Mouse+$mod to drag floating windows; drag tiling windows by title bar
 floating_modifier $mod
@@ -146,6 +151,16 @@ exec --no-startup-id ~/.config/waybar/launch.sh
 
 # Notifications (dunst speaks Wayland natively)
 exec --no-startup-id dunst
+
+# On-screen display daemon for volume/brightness/capslock indicators
+exec --no-startup-id swayosd-server
+
+# Clipboard history (Alt+c to search via fuzzel)
+exec --no-startup-id wl-paste --watch cliphist store
+bindsym $mod+c exec cliphist list | fuzzel --dmenu | cliphist copy
+
+# Battery alerts (notifications at low/full thresholds)
+exec --no-startup-id poweralertd
 
 # Wallpaper: random from ~/Pictures/wallpaper (swaybg replaces feh)
 exec --no-startup-id swaybg -i "$(find ~/Pictures/wallpaper -maxdepth 1 -type f | shuf -n1)" -m fill

@@ -9,7 +9,7 @@
 
   "modules-left": ["sway/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["custom/aqi", "custom/cpu", "custom/memory", "pulseaudio", "battery", "network", "tray"],
+  "modules-right": ["custom/weather", "custom/moon", "custom/aqi", "custom/cpu", "custom/memory", "pulseaudio", "battery", "network", "tray"],
 
   "sway/workspaces": {
     "disable-scroll": true,
@@ -20,6 +20,21 @@
   "clock": {
     "interval": 30,
     "format": "󰃭 {:%a %b %d  󰥔 %H:%M}"
+  },
+
+  "custom/weather": {
+    "exec": "~/.config/wayland-plus/scripts/weather.sh waybar",
+    "return-type": "json",
+    "interval": 900,
+    "on-click": "python3 ~/.config/wayland-plus/scripts/weather-chart.py",
+    "on-click-right": "~/.config/wayland-plus/scripts/weather.sh notify"
+  },
+
+  "custom/moon": {
+    "exec": "~/.config/wayland-plus/scripts/moon.sh waybar",
+    "return-type": "json",
+    "interval": 3600,
+    "on-click": "~/.config/wayland-plus/scripts/moon.sh notify"
   },
 
   "custom/aqi": {

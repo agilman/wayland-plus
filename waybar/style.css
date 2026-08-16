@@ -46,6 +46,17 @@ window#waybar {
   padding: 0 4px;
 }
 
+/* ---- weather classes (WMO code groups, see weather.sh) ---- */
+#custom-weather.clear { color: #f9e2af; }
+#custom-weather.cloudy { color: #a6adc8; }
+#custom-weather.rain { color: #89b4fa; }
+#custom-weather.snow { color: #94e2d5; }
+#custom-weather.storm { color: #f38ba8; }
+#custom-weather.nodata { color: #585b70; }
+
+/* ---- moon ---- */
+#custom-moon { color: #cba6f7; }
+
 /* ---- AQI classes (EPA categories, colors from aqi.sh color_for) ---- */
 #custom-aqi.good          { color: #a6e3a1; }
 #custom-aqi.moderate      { color: #f9e2af; }

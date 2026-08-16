@@ -9,9 +9,15 @@ Evolved from an i3/polybar rice; now fully Wayland-native.
 
 | Module | Shows | Left click | Right click | Middle click |
 |---|---|---|---|---|
+| **Weather** | Open-Meteo current conditions (icon + temp) | 24h rain chart (dunst image) | Detail popup | — |
+| **Moon** | Phase icon (computed offline) | Popup: phase, illumination, next full/new moon | — | — |
 | **AQI** | US Air Quality Index, EPA-colored | 24h forecast chart (dunst image) | Detail popup (source, PM2.5, as-of) | AirNow fire/smoke map |
 | **CPU** | Live busy % | Last-hour chart + top-5 consumers | Top consumers popup | — |
 | **Memory** | Used % | Top consumers popup | — | — |
+
+Also bundled: **SwayOSD** on-screen volume/brightness indicators (media keys),
+**cliphist** clipboard history (`Alt+c` → fuzzel picker), and **poweralertd**
+battery alerts.
 
 ### AQI: real monitors first, model second
 

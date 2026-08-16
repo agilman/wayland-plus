@@ -57,6 +57,7 @@ Dependencies (Debian/Ubuntu):
   sudo apt install waybar sway swaybg swayidle swaylock dunst kitty tmux \\
     fuzzel rofi grim slurp wl-clipboard dex pavucontrol \\
     network-manager-gnome jq curl python3-matplotlib \\
+    swayosd cliphist poweralertd \\
     fonts-jetbrains-mono-nerd-font   # or install JetBrainsMono Nerd Font manually
 Optional: sysstat (adds historical CPU data via sar backfill)
 
