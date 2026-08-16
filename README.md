@@ -19,6 +19,12 @@ Also bundled: **SwayOSD** on-screen volume/brightness indicators (media keys),
 **cliphist** clipboard history (`Alt+c` → fuzzel picker), and **poweralertd**
 battery alerts.
 
+> **Brightness keys do nothing after a fresh swayosd install?** Its udev rule
+> (which gives the `video` group write access to `/sys/class/backlight/*/brightness`)
+> only fires on device add. Apply it without rebooting:
+> `sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=backlight --action=add`
+> Also make sure your user is in the `video` group: `sudo usermod -a -G video $USER` (re-login).
+
 ### AQI: real monitors first, model second
 
 `aqi.sh` prefers the **official AirNow monitor observation** for your location
